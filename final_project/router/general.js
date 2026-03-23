@@ -10,7 +10,7 @@ public_users.post('/register', (req,res) => {
   const password = req.body.password;
   if (username && password) {
     if (!isValid(username)) {
-      users.push({'username':username,'password':password});
+      users.push({"username":username,"password":password});
       return res.status(200).json({message: 'User successfully registered. Now you can login'});
     } else {
       return res.status(404).json({message: 'User already exists!'});
@@ -22,8 +22,10 @@ public_users.post('/register', (req,res) => {
 // Task 10: Get the book list available in the shop using async-await with Axios
 public_users.get('/', async function (req, res) {
   try {
-    const response = await axios.get('http://localhost:5000/');
-    return res.status(200).send(JSON.stringify(response.data, null, 4));
+    const response = await new Promise((resolve, reject) => {
+      resolve(books);
+    });
+    return res.status(200).send(JSON.stringify(response, null, 4));
   } catch (err) {
     return res.status(200).send(JSON.stringify(books, null, 4));
   }
@@ -33,10 +35,16 @@ public_users.get('/', async function (req, res) {
 public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const isbn = req.params.isbn;
-    const response = await axios.get('http://localhost:5000/isbn/' + isbn);
-    return res.status(200).json(response.data);
+    const response = await new Promise((resolve, reject) => {
+      if (books[isbn]) {
+        resolve(books[isbn]);
+      } else {
+        reject(new Error('ISBN not found'));
+      }
+    });
+    return res.status(200).json(response);
   } catch (err) {
-    return res.status(200).json(books[req.params.isbn]);
+    return res.status(404).json({message: 'ISBN not found'});
   }
 });
 
@@ -44,17 +52,17 @@ public_users.get('/isbn/:isbn', async function (req, res) {
 public_users.get('/author/:author', async function (req, res) {
   try {
     const author = req.params.author;
-    const response = await axios.get('http://localhost:5000/author/' + author);
-    return res.status(200).json(response.data);
-  } catch (err) {
-    const author = req.params.author;
-    let booksByAuthor = [];
-    for (let key in books) {
-      if (books[key].author === author) {
-        booksByAuthor.push(books[key]);
+    const response = await new Promise((resolve, reject) => {
+      const booksByAuthor = Object.values(books).filter(b => b.author === author);
+      if (booksByAuthor.length > 0) {
+        resolve(booksByAuthor);
+      } else {
+        reject(new Error('Author not found'));
       }
-    }
-    return res.status(200).json({booksByAuthor: booksByAuthor});
+    });
+    return res.status(200).json(response);
+  } catch (err) {
+    return res.status(404).json({message: 'Author not found'});
   }
 });
 
@@ -62,24 +70,26 @@ public_users.get('/author/:author', async function (req, res) {
 public_users.get('/title/:title', async function (req, res) {
   try {
     const title = req.params.title;
-    const response = await axios.get('http://localhost:5000/title/' + title);
-    return res.status(200).json(response.data);
-  } catch (err) {
-    const title = req.params.title;
-    let booksByTitle = [];
-    for (let key in books) {
-      if (books[key].title === title) {
-        booksByTitle.push(books[key]);
+    const response = await new Promise((resolve, reject) => {
+      const booksByTitle = Object.values(books).filter(b => b.title === title);
+      if (booksByTitle.length > 0) {
+        resolve(booksByTitle);
+      } else {
+        reject(new Error('Title not found'));
       }
-    }
-    return res.status(200).json({booksbytitle: booksByTitle});
+    });
+    return res.status(200).json(response);
+  } catch (err) {
+    return res.status(404).json({message: 'Title not found'});
   }
 });
 
 // Get book review
 public_users.get('/review/:isbn', function (req, res) {
   const isbn = req.params.isbn;
-  return res.status(200).json(books[isbn].reviews);
+  if (books[isbn]) {
+    return res.status(200).json(books[isbn].reviews);
+  }
 });
 
 module.exports.general = public_users;
