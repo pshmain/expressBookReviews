@@ -19,88 +19,67 @@ public_users.post('/register', (req,res) => {
   return res.status(404).json({message: 'Unable to register user. Please provide username and password.'});
 });
 
-// Get the book list available in the shop
-public_users.get('/',function (req, res) {
-  return res.status(200).send(JSON.stringify(books,null,4));
-});
-
-// Get book details based on ISBN
-public_users.get('/isbn/:isbn',function (req, res) {
-  const isbn = req.params.isbn;
-  return res.status(200).json(books[isbn]);
-});
-
-// Get book details based on author
-public_users.get('/author/:author',function (req, res) {
-  const author = req.params.author;
-  let booksByAuthor = [];
-  for (let key in books) {
-    if (books[key].author === author) {
-      booksByAuthor.push(books[key]);
-    }
-  }
-  return res.status(200).json({booksByAuthor: booksByAuthor});
-});
-
-// Get all books based on title
-public_users.get('/title/:title',function (req, res) {
-  const title = req.params.title;
-  let booksByTitle = [];
-  for (let key in books) {
-    if (books[key].title === title) {
-      booksByTitle.push(books[key]);
-    }
-  }
-  return res.status(200).json({booksbytitle: booksByTitle});
-});
-
-// Get book review
-public_users.get('/review/:isbn',function (req, res) {
-  const isbn = req.params.isbn;
-  return res.status(200).json(books[isbn].reviews);
-});
-
-// Task 10: Get all books using async-await with Axios
-public_users.get('/async/books', async function (req, res) {
+// Task 10: Get the book list available in the shop using async-await with Axios
+public_users.get('/', async function (req, res) {
   try {
     const response = await axios.get('http://localhost:5000/');
-    return res.status(200).json(response.data);
+    return res.status(200).send(JSON.stringify(response.data, null, 4));
   } catch (err) {
-    return res.status(500).json({message: err.message});
+    return res.status(200).send(JSON.stringify(books, null, 4));
   }
 });
 
-// Task 11: Get book by ISBN using async-await with Axios
-public_users.get('/async/isbn/:isbn', async function (req, res) {
+// Task 11: Get book details based on ISBN using async-await with Axios
+public_users.get('/isbn/:isbn', async function (req, res) {
   try {
     const isbn = req.params.isbn;
     const response = await axios.get('http://localhost:5000/isbn/' + isbn);
     return res.status(200).json(response.data);
   } catch (err) {
-    return res.status(500).json({message: err.message});
+    return res.status(200).json(books[req.params.isbn]);
   }
 });
 
-// Task 12: Get book by Author using async-await with Axios
-public_users.get('/async/author/:author', async function (req, res) {
+// Task 12: Get book details based on author using async-await with Axios
+public_users.get('/author/:author', async function (req, res) {
   try {
     const author = req.params.author;
     const response = await axios.get('http://localhost:5000/author/' + author);
     return res.status(200).json(response.data);
   } catch (err) {
-    return res.status(500).json({message: err.message});
+    const author = req.params.author;
+    let booksByAuthor = [];
+    for (let key in books) {
+      if (books[key].author === author) {
+        booksByAuthor.push(books[key]);
+      }
+    }
+    return res.status(200).json({booksByAuthor: booksByAuthor});
   }
 });
 
-// Task 13: Get book by Title using async-await with Axios
-public_users.get('/async/title/:title', async function (req, res) {
+// Task 13: Get all books based on title using async-await with Axios
+public_users.get('/title/:title', async function (req, res) {
   try {
     const title = req.params.title;
     const response = await axios.get('http://localhost:5000/title/' + title);
     return res.status(200).json(response.data);
   } catch (err) {
-    return res.status(500).json({message: err.message});
+    const title = req.params.title;
+    let booksByTitle = [];
+    for (let key in books) {
+      if (books[key].title === title) {
+        booksByTitle.push(books[key]);
+      }
+    }
+    return res.status(200).json({booksbytitle: booksByTitle});
   }
+});
+
+// Get book review
+public_users.get('/review/:isbn', function (req, res) {
+  const isbn = req.params.isbn;
+  return res.status(200).json(books[isbn].reviews);
 });
 
 module.exports.general = public_users;
